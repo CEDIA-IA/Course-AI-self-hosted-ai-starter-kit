@@ -3,14 +3,13 @@ volumes:
   postgres_storage:
   ollama_storage:
   qdrant_storage:
-  langfuse_postgres_storage:
 
 
 networks:
   demo:
 
 x-n8n: &service-n8n
-  image: docker.n8n.io/n8nio/n8n:${N8N_VERSION:-2.20.6}
+  image: docker.n8n.io/n8nio/n8n:${N8N_VERSION:-2.31.7}
   networks: ['demo']
   environment:
     - DB_TYPE=postgresdb
@@ -37,7 +36,7 @@ x-n8n: &service-n8n
       required: true  
 
 x-ollama: &service-ollama
-  image: ollama/ollama:${OLLAMA_VERSION:-0.23.3}
+  image: ollama/ollama:${OLLAMA_VERSION:-0.32.4}
   container_name: ollama
   networks: ['demo']
   restart: unless-stopped
@@ -45,6 +44,27 @@ x-ollama: &service-ollama
     - 11434:11434
   volumes:
     - ollama_storage:/root/.ollama
+
+x-init-ollama: &init-ollama
+  image: ollama/ollama:${OLLAMA_VERSION:-0.32.4}
+  networks: ['demo']
+  environment:
+    - OLLAMA_HOST=ollama:11434
+    - DEFAULT_OLLAMA_MODEL=${DEFAULT_OLLAMA_MODEL:-}
+  entrypoint: /bin/sh
+  command:
+    - "-c"
+    - |
+      if [ -z "$$DEFAULT_OLLAMA_MODEL" ]; then
+        echo 'DEFAULT_OLLAMA_MODEL no esta definido en .env: no se descargara ningun modelo por defecto.'
+        exit 0
+      fi
+      echo "Descargando modelo por defecto: $$DEFAULT_OLLAMA_MODEL"
+      until ollama pull "$$DEFAULT_OLLAMA_MODEL"; do
+        echo 'Ollama todavia no esta listo, reintentando en 5s...'
+        sleep 5
+      done
+      echo "Modelo $$DEFAULT_OLLAMA_MODEL listo."
 
 
 services:
@@ -131,43 +151,28 @@ services:
   ollama-gpu-amd:
     profiles: ["gpu-amd"]
     <<: *service-ollama
-    image: ollama/ollama:${OLLAMA_VERSION_AMD:-0.23.3-rocm}
+    image: ollama/ollama:${OLLAMA_VERSION_AMD:-0.32.4-rocm}
     devices:
       - "/dev/kfd"
       - "/dev/dri"
 
-  langfuse-db:
-    image: postgres:16-alpine
-    hostname: langfuse-db
-    networks: ['demo']
-    restart: unless-stopped
-    environment:
-      - POSTGRES_USER=langfuse
-      - POSTGRES_PASSWORD=${LANGFUSE_DB_PASSWORD:-langfuse}
-      - POSTGRES_DB=langfuse
-    volumes:
-      - langfuse_postgres_storage:/var/lib/postgresql/data
-    healthcheck:
-      test: ['CMD-SHELL', 'pg_isready -h localhost -U langfuse -d langfuse']
-      interval: 5s
-      timeout: 5s
-      retries: 10
-
-  langfuse-server:
-    image: langfuse/langfuse:2
-    hostname: langfuse
-    container_name: langfuse
-    networks: ['demo']
-    restart: unless-stopped
-    ports:
-      - 3000:3000
-    environment:
-      - DATABASE_URL=postgresql://langfuse:${LANGFUSE_DB_PASSWORD:-langfuse}@langfuse-db:5432/langfuse
-      - NEXTAUTH_SECRET=${LANGFUSE_SECRET:-changeme-secret-32chars-minimum}
-      - SALT=${LANGFUSE_SALT:-changeme-salt}
-      - NEXTAUTH_URL=http://localhost:3000
-      - TELEMETRY_ENABLED=false
-      - LANGFUSE_ENABLE_EXPERIMENTAL_FEATURES=false
+  ollama-pull-model-cpu:
+    profiles: ["cpu"]
+    <<: *init-ollama
+    container_name: ollama-pull-model-cpu
     depends_on:
-      langfuse-db:
-        condition: service_healthy
+      - ollama-cpu
+
+  ollama-pull-model-gpu:
+    profiles: ["gpu-nvidia"]
+    <<: *init-ollama
+    container_name: ollama-pull-model-gpu
+    depends_on:
+      - ollama-gpu
+
+  ollama-pull-model-gpu-amd:
+    profiles: ["gpu-amd"]
+    <<: *init-ollama
+    container_name: ollama-pull-model-gpu-amd
+    depends_on:
+      - ollama-gpu-amd

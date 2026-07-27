@@ -19,8 +19,6 @@ con una API integral
 ✅ [**PostgreSQL**](https://www.postgresql.org/) -  Caballo de batalla del mundo de
 Data Engineering, maneja grandes cantidades de datos de forma segura.
 
-✅ [**Langfuse**](https://langfuse.com/) - Plataforma open-source de LLM observability para hacer tracing, monitorear, evaluar y depurar aplicaciones de AI.
-
 ### Qué puedes crear
 
 - **AI Agents** para agendar citas
@@ -47,7 +45,23 @@ cp .env.example .env # debes actualizar los secrets y passwords dentro
  
 > [Instrucciones para Configurar GPU dentro de Docker](https://docs.ollama.com/docker).
 
-#### Para usuarios de Nvidia GPU
+**Importante**: Docker **no instala drivers de GPU automáticamente**. Antes de levantar el
+stack necesitas tener lo siguiente instalado en tu sistema (no el CUDA Toolkit completo,
+solo lo que se indica):
+
+| Escenario | Qué instalar ANTES en el host | ¿CUDA Toolkit completo? |
+|---|---|---|
+| NVIDIA GPU en Windows (WSL2) | Driver NVIDIA reciente con soporte WSL2 + Docker Desktop con GPU support habilitado | No — la imagen de Ollama ya incluye el runtime CUDA necesario |
+| NVIDIA GPU en Linux nativo | Driver NVIDIA + [NVIDIA Container Toolkit](https://docs.ollama.com/docker) (`nvidia-ctk runtime configure`) | No |
+| AMD GPU en Linux (ROCm) | Driver/kernel ROCm que exponga `/dev/kfd` y `/dev/dri` | No aplica (usa ROCm) |
+| Mac / Apple Silicon | Nada — Docker no puede exponer la GPU de Apple | No aplica |
+| Sin GPU, GPU no-NVIDIA, o no quieres instalar drivers | Nada extra, solo Docker | No — todo corre en CPU |
+
+Si tu GPU no es NVIDIA (por ejemplo GPU integrada Intel) o no quieres instalar drivers,
+usa directamente el perfil `cpu` (sección "Para todos los demás" más abajo) — no requiere
+ninguna configuración adicional, solo es más lento en la inferencia.
+
+#### Para usuarios de Nvidia GPU (Windows con WSL2 o Linux nativo)
 
 ```bash
 git clone https://github.com/CEDIA-IA/Course-AI-self-hosted-ai-starter-kit.git
@@ -55,6 +69,11 @@ cd Course-AI-self-hosted-ai-starter-kit
 cp .env.example .env # debes actualizar los secrets y passwords dentro
 docker compose --profile gpu-nvidia up
 ```
+
+> ✅ **Descarga automática de modelo**: al usar `--profile gpu-nvidia`, el contenedor
+> `ollama-pull-model-gpu` descarga automáticamente el modelo definido en
+> `DEFAULT_OLLAMA_MODEL` (por defecto `qwen3.5:2b`). Ver
+> [Modelo de Ollama por defecto](#-modelo-de-ollama-por-defecto).
 
 ### Para usuarios de AMD GPU en Linux
 
@@ -65,18 +84,38 @@ cp .env.example .env # debes actualizar los secrets y passwords dentro
 docker compose --profile gpu-amd up
 ```
 
+> ✅ **Descarga automática de modelo**: al usar `--profile gpu-amd`, el contenedor
+> `ollama-pull-model-gpu-amd` descarga automáticamente el modelo definido en
+> `DEFAULT_OLLAMA_MODEL`. Ver [Modelo de Ollama por defecto](#-modelo-de-ollama-por-defecto).
+
 #### Para usuarios de Mac / Apple Silicon
 
 Si estás usando una Mac con un procesador M1 o más reciente, lamentablemente no puedes exponer tu GPU
 a la instancia de Docker. En este caso hay dos opciones:
 
-1. Ejecutar el starter kit completamente en CPU, como en la sección "Para todos los demás"
-   más abajo
+1. Ejecutar el starter kit completamente en CPU, usando el perfil `cpu` (**recomendado para
+   la mayoría de estudiantes** — incluye descarga automática de modelo, ver más abajo)
 2. Ejecutar Ollama en tu Mac para una inferencia más rápida, y conectarte a eso desde la instancia de n8n
+   (más rápido, pero sin descarga automática de modelo)
 
-Si quieres ejecutar Ollama en tu Mac, revisa la
-[página principal de Ollama](https://ollama.com/)
-para ver las instrucciones de instalación, y ejecuta el starter kit de la siguiente manera:
+**Opción 1 — todo en Docker (recomendado):**
+
+```bash
+git clone https://github.com/CEDIA-IA/Course-AI-self-hosted-ai-starter-kit.git
+cd Course-AI-self-hosted-ai-starter-kit
+cp .env.example .env # debes actualizar los secrets y passwords dentro
+docker compose --profile cpu up
+```
+
+> ✅ **Descarga automática de modelo**: la imagen `ollama/ollama` soporta Apple Silicon
+> (linux/arm64) de forma nativa. Con `--profile cpu`, el contenedor `ollama-pull-model-cpu`
+> descarga automáticamente el modelo de `DEFAULT_OLLAMA_MODEL` (por defecto `qwen3.5:2b`),
+> igual que en Windows/Linux. Ver [Modelo de Ollama por defecto](#-modelo-de-ollama-por-defecto).
+
+**Opción 2 — Ollama nativo en macOS (más rápido, sin descarga automática):**
+
+Revisa la [página principal de Ollama](https://ollama.com/) para instalarlo en tu Mac, y
+ejecuta el starter kit sin ningún perfil:
 
 ```bash
 git clone https://github.com/CEDIA-IA/Course-AI-self-hosted-ai-starter-kit.git
@@ -84,6 +123,10 @@ cd Course-AI-self-hosted-ai-starter-kit
 cp .env.example .env # debes actualizar los secrets y passwords dentro
 docker compose up
 ```
+
+> ⚠️ **Sin `--profile`, ningún contenedor de Ollama se levanta dentro de Docker** (ni el de
+> pull automático). Debes descargar el modelo tú mismo en tu Mac antes de usar el workflow:
+> `ollama pull qwen3.5:2b` (o el modelo que hayas elegido).
 
 ##### Para usuarios de Mac que ejecutan OLLAMA localmente
 
@@ -96,7 +139,7 @@ Si estás ejecutando OLLAMA localmente en tu Mac (no en Docker), necesitas modif
    2. Haz clic en "Local Ollama service"
    3. Cambia la base URL a "[http://host.docker.internal:11434/](http://host.docker.internal:11434/)"
 
-#### Para todos los demás
+#### Para todos los demás (Windows/Linux sin GPU, o que no quieren instalar drivers)
 
 ```bash
 git clone https://github.com/CEDIA-IA/Course-AI-self-hosted-ai-starter-kit.git
@@ -104,6 +147,10 @@ cd Course-AI-self-hosted-ai-starter-kit
 cp .env.example .env # debes actualizar los secrets y passwords dentro
 docker compose --profile cpu up
 ```
+
+> ✅ **Descarga automática de modelo**: igual que en los demás perfiles, `ollama-pull-model-cpu`
+> descarga automáticamente `DEFAULT_OLLAMA_MODEL` — no necesitas GPU, driver, ni CUDA/ROCm
+> para que esto funcione. Ver [Modelo de Ollama por defecto](#-modelo-de-ollama-por-defecto).
 
 ## ⚡️ Inicio rápido y uso
 
@@ -115,9 +162,12 @@ Después de completar los pasos de instalación anteriores, simplemente sigue lo
 2. Abre el workflow incluido:
    [http://localhost:5678/workflow/srOnR8PAY3u4RSwb](http://localhost:5678/workflow/srOnR8PAY3u4RSwb)
 3. Haz clic en el botón **Chat** en la parte inferior del canvas para comenzar a ejecutar el workflow.
-4. Si esta es la primera vez que ejecutas el workflow, puede que necesites esperar
-   hasta que Ollama termine de descargar Llama3.2. Puedes inspeccionar los logs de la consola
-   de Docker para revisar el progreso.
+4. Si esta es la primera vez que levantas el stack con un perfil (`cpu`, `gpu-nvidia` o
+   `gpu-amd`), Ollama descargará automáticamente el modelo definido en `DEFAULT_OLLAMA_MODEL`
+   (ver sección [Modelo de Ollama por defecto](#-modelo-de-ollama-por-defecto) más abajo).
+   Puedes inspeccionar los logs del contenedor `ollama-pull-model-*` para revisar el progreso.
+   Si dejaste `DEFAULT_OLLAMA_MODEL` vacío, no se descargará nada automáticamente y deberás
+   bajar un modelo manualmente con `docker exec ollama ollama pull <modelo>` antes de usar el workflow.
 
 Para abrir n8n en cualquier momento, visita [http://localhost:5678/](http://localhost:5678/) en tu navegador.
 
@@ -134,6 +184,45 @@ language model y Qdrant como tu vector store.
 > self-hosted. Aunque no está completamente optimizado para entornos de producción, combina
 > componentes robustos que funcionan bien juntos para proyectos proof-of-concept.
 > Puedes personalizarlo para satisfacer tus necesidades específicas
+
+## 🤖 Modelo de Ollama por defecto
+
+Al levantar el stack con `docker compose --profile cpu up` (o `gpu-nvidia` / `gpu-amd`),
+un contenedor auxiliar (`ollama-pull-model-*`) descarga automáticamente el modelo indicado
+en la variable `DEFAULT_OLLAMA_MODEL` de tu archivo `.env`. Si dejas esa variable vacía
+(`DEFAULT_OLLAMA_MODEL=`), **no se descarga ningún modelo** — útil si no tienes GPU y
+prefieres no levantar un modelo local, o si vas a gestionar los modelos manualmente.
+
+### Modelos recomendados para VRAM limitada (4-6 GB)
+
+Pensado para que estudiantes con laptops modestas (GPU de 4-6 GB de VRAM, o incluso solo CPU)
+puedan levantar el kit sin problema:
+
+| Modelo | Tag | Descarga | RAM (solo CPU) | VRAM (con GPU) | Uso recomendado |
+|---|---|---|---|---|---|
+| **Qwen3.5 2B** ⭐ | `qwen3.5:2b` | 2.7 GB | ~6 GB | ~3.5-4 GB | **Por defecto.** Soporta tool-calling (necesario para los nodos AI Agent de n8n), visión y contexto de 256K |
+| Qwen3.5 0.8B | `qwen3.5:0.8b` | 1.0 GB | ~3 GB | ~1.5-2 GB | Para equipos muy limitados o sin GPU dedicada |
+| Qwen3.5 4B | `qwen3.5:4b` | 3.4 GB | ~8 GB | ~4.5-5 GB | Si tienes 6 GB+ de VRAM y quieres mejor calidad |
+| MiniCPM-V 4.6 | `minicpm-v4.6:1b` | 1.6 GB | ~4 GB | ~2-3 GB | Especializado en visión (multi-imagen/video, OCR de documentos). No confirma soporte de tool-calling, úsalo para workflows centrados en análisis de imágenes/PDFs, no para AI Agents con herramientas |
+
+> Regla general: la RAM/VRAM necesaria ronda 1.3-1.5× el tamaño de descarga del modelo
+> (por el overhead del contexto). Cuantos más tokens de contexto uses, más memoria adicional
+> se necesita.
+
+### Cambiar el modelo por defecto
+
+Edita `DEFAULT_OLLAMA_MODEL` en tu `.env` con cualquier tag de la
+[librería de Ollama](https://ollama.com/search) y vuelve a levantar el stack:
+
+```bash
+# .env
+DEFAULT_OLLAMA_MODEL=qwen3.5:2b   # o minicpm-v4.6:1b, qwen3.5:4b, etc. Vacío = no descargar nada
+
+docker compose --profile cpu up
+```
+
+Recuerda que también debes seleccionar ese mismo modelo en el nodo **Ollama Chat Model**
+dentro del workflow de n8n (por defecto viene configurado con `llama3.2:latest`).
 
 ## Actualización
 
