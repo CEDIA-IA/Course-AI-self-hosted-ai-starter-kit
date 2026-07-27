@@ -37,6 +37,16 @@ Data Engineering, maneja grandes cantidades de datos de forma segura.
 git clone https://github.com/CEDIA-IA/Course-AI-self-hosted-ai-starter-kit.git
 cd Course-AI-self-hosted-ai-starter-kit
 cp .env.example .env # debes actualizar los secrets y passwords dentro
+mkdir -p shared
+```
+
+`.env.example` trae valores de ejemplo (`POSTGRES_PASSWORD=password`,
+`N8N_ENCRYPTION_KEY=super-secret-key`, etc.). Reemplaza al menos `POSTGRES_PASSWORD`,
+`N8N_ENCRYPTION_KEY` y `N8N_USER_MANAGEMENT_JWT_SECRET` en tu `.env` con valores
+aleatorios, por ejemplo con:
+
+```bash
+openssl rand -base64 32
 ```
 
 ### Ejecutar n8n usando Docker Compose
@@ -67,6 +77,7 @@ ninguna configuración adicional, solo es más lento en la inferencia.
 git clone https://github.com/CEDIA-IA/Course-AI-self-hosted-ai-starter-kit.git
 cd Course-AI-self-hosted-ai-starter-kit
 cp .env.example .env # debes actualizar los secrets y passwords dentro
+mkdir -p shared
 docker compose --profile gpu-nvidia up
 ```
 
@@ -81,6 +92,7 @@ docker compose --profile gpu-nvidia up
 git clone https://github.com/CEDIA-IA/Course-AI-self-hosted-ai-starter-kit.git
 cd Course-AI-self-hosted-ai-starter-kit
 cp .env.example .env # debes actualizar los secrets y passwords dentro
+mkdir -p shared
 docker compose --profile gpu-amd up
 ```
 
@@ -104,6 +116,7 @@ a la instancia de Docker. En este caso hay dos opciones:
 git clone https://github.com/CEDIA-IA/Course-AI-self-hosted-ai-starter-kit.git
 cd Course-AI-self-hosted-ai-starter-kit
 cp .env.example .env # debes actualizar los secrets y passwords dentro
+mkdir -p shared
 docker compose --profile cpu up
 ```
 
@@ -121,6 +134,7 @@ ejecuta el starter kit sin ningún perfil:
 git clone https://github.com/CEDIA-IA/Course-AI-self-hosted-ai-starter-kit.git
 cd Course-AI-self-hosted-ai-starter-kit
 cp .env.example .env # debes actualizar los secrets y passwords dentro
+mkdir -p shared
 docker compose up
 ```
 
@@ -145,6 +159,7 @@ Si estás ejecutando OLLAMA localmente en tu Mac (no en Docker), necesitas modif
 git clone https://github.com/CEDIA-IA/Course-AI-self-hosted-ai-starter-kit.git
 cd Course-AI-self-hosted-ai-starter-kit
 cp .env.example .env # debes actualizar los secrets y passwords dentro
+mkdir -p shared
 docker compose --profile cpu up
 ```
 

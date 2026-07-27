@@ -59,11 +59,25 @@ x-init-ollama: &init-ollama
         echo 'DEFAULT_OLLAMA_MODEL no esta definido en .env: no se descargara ningun modelo por defecto.'
         exit 0
       fi
-      echo "Descargando modelo por defecto: $$DEFAULT_OLLAMA_MODEL"
-      until ollama pull "$$DEFAULT_OLLAMA_MODEL"; do
-        echo 'Ollama todavia no esta listo, reintentando en 5s...'
+
+      echo 'Esperando a que el servidor de Ollama este listo...'
+      tries=0
+      until ollama list >/dev/null 2>&1; do
+        tries=$$((tries + 1))
+        if [ "$$tries" -ge 30 ]; then
+          echo 'ERROR: el servidor de Ollama no respondio tras 150s. Revisa que el contenedor ollama este corriendo.'
+          exit 1
+        fi
         sleep 5
       done
+
+      echo "Servidor listo. Descargando modelo por defecto: $$DEFAULT_OLLAMA_MODEL"
+      if ! ollama pull "$$DEFAULT_OLLAMA_MODEL"; then
+        echo "ERROR: no se pudo descargar el modelo '$$DEFAULT_OLLAMA_MODEL'."
+        echo "Verifica que el tag exista en https://ollama.com/search y que este bien escrito"
+        echo "en DEFAULT_OLLAMA_MODEL dentro de tu archivo .env (ej: qwen3.5:2b)."
+        exit 1
+      fi
       echo "Modelo $$DEFAULT_OLLAMA_MODEL listo."
 
 
