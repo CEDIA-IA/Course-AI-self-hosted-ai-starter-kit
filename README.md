@@ -34,7 +34,7 @@ Data Engineering, maneja grandes cantidades de datos de forma segura.
 ### Clonar el repositorio
 
 ```bash
-git clone https://github.com/CEDIA-IA/Course-AI-self-hosted-ai-starter-kit.git
+git clone https://github.com/Cosmic-ACe/Course-AI-self-hosted-ai-starter-kit.git
 cd Course-AI-self-hosted-ai-starter-kit
 cp .env.example .env # debes actualizar los secrets y passwords dentro
 mkdir -p shared
@@ -74,7 +74,7 @@ ninguna configuración adicional, solo es más lento en la inferencia.
 #### Para usuarios de Nvidia GPU (Windows con WSL2 o Linux nativo)
 
 ```bash
-git clone https://github.com/CEDIA-IA/Course-AI-self-hosted-ai-starter-kit.git
+git clone https://github.com/Cosmic-ACe/Course-AI-self-hosted-ai-starter-kit.git
 cd Course-AI-self-hosted-ai-starter-kit
 cp .env.example .env # debes actualizar los secrets y passwords dentro
 mkdir -p shared
@@ -89,7 +89,7 @@ docker compose --profile gpu-nvidia up
 ### Para usuarios de AMD GPU en Linux
 
 ```bash
-git clone https://github.com/CEDIA-IA/Course-AI-self-hosted-ai-starter-kit.git
+git clone https://github.com/Cosmic-ACe/Course-AI-self-hosted-ai-starter-kit.git
 cd Course-AI-self-hosted-ai-starter-kit
 cp .env.example .env # debes actualizar los secrets y passwords dentro
 mkdir -p shared
@@ -113,7 +113,7 @@ a la instancia de Docker. En este caso hay dos opciones:
 **Opción 1 — todo en Docker (recomendado):**
 
 ```bash
-git clone https://github.com/CEDIA-IA/Course-AI-self-hosted-ai-starter-kit.git
+git clone https://github.com/Cosmic-ACe/Course-AI-self-hosted-ai-starter-kit.git
 cd Course-AI-self-hosted-ai-starter-kit
 cp .env.example .env # debes actualizar los secrets y passwords dentro
 mkdir -p shared
@@ -131,7 +131,7 @@ Revisa la [página principal de Ollama](https://ollama.com/) para instalarlo en 
 ejecuta el starter kit sin ningún perfil:
 
 ```bash
-git clone https://github.com/CEDIA-IA/Course-AI-self-hosted-ai-starter-kit.git
+git clone https://github.com/Cosmic-ACe/Course-AI-self-hosted-ai-starter-kit.git
 cd Course-AI-self-hosted-ai-starter-kit
 cp .env.example .env # debes actualizar los secrets y passwords dentro
 mkdir -p shared
@@ -156,7 +156,7 @@ Si estás ejecutando OLLAMA localmente en tu Mac (no en Docker), necesitas modif
 #### Para todos los demás (Windows/Linux sin GPU, o que no quieren instalar drivers)
 
 ```bash
-git clone https://github.com/CEDIA-IA/Course-AI-self-hosted-ai-starter-kit.git
+git clone https://github.com/Cosmic-ACe/Course-AI-self-hosted-ai-starter-kit.git
 cd Course-AI-self-hosted-ai-starter-kit
 cp .env.example .env # debes actualizar los secrets y passwords dentro
 mkdir -p shared
